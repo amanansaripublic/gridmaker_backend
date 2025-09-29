@@ -15,4 +15,12 @@ class VerifyRegistrationSerializer(serializers.Serializer):
     password = serializers.CharField()
     otp = serializers.CharField()
     token = serializers.CharField(max_length=600)
-    
+
+class RequestPasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class VerifyPasswordResetSerializer(serializers.Serializer):
+    password = serializers.CharField()
+    otp = serializers.CharField()
+    token = serializers.CharField(max_length=600)

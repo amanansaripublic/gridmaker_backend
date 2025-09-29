@@ -10,7 +10,8 @@ class OTPVerificationModel(models.Model):
         EMAIL = 'EMAIL', 'Email'
     
     class Purposes(models.TextChoices):
-        REGISTRATION = 'REGISTRATION', 'Registration'
+        REGISTRATION = 'REGISTRATION', 'registration'
+        PASSWORD_RESET= 'PASSWORD_RESET', "password_reset"
     
     token = models.UUIDField()
     opt_method = models.CharField(max_length=256, choices=OTPMethods.choices)

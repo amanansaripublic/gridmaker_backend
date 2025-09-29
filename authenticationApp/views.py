@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import RequestRegisterationSerializer, OTPVerificationModelSerializer, VerifyRegistrationSerializer
+from .serializers import RequestRegisterationSerializer, OTPVerificationModelSerializer, VerifyRegistrationSerializer, RequestPasswordResetSerializer, VerifyPasswordResetSerializer
 from django.conf import settings
 from django.core.mail import send_mail
 from appbackend import AllUtils
@@ -15,7 +15,7 @@ from userApp.serializers import UserDetialsModelSerializer, UserSerializer
 from userApp.models import UserDetailsModel
 
 class RequestRegisterationAPI(APIView):
-
+    authentication_classes  =  []
     def post(self, request):
         data = request.data
         serializer = RequestRegisterationSerializer(data=data)
@@ -53,6 +53,7 @@ class RequestRegisterationAPI(APIView):
 
 
 class VerifyRegisterationAPI(APIView):
+    authentication_classes  = []
     def post(self, request):
         data = request.data
         serializer = VerifyRegistrationSerializer(data=data)
@@ -92,3 +93,75 @@ class VerifyRegisterationAPI(APIView):
 
         return Response(serializer.errors, status= status.HTTP_400_BAD_REQUEST)
         
+
+class RequestPasswordResetAPI(APIView):
+    authentication_classes  =  []
+    def post(self, request):
+        data = request.data
+        serializer = RequestPasswordResetSerializer(data=data)
+        if serializer.is_valid():
+            email = data['email']
+            if not User.objects.filter(username=email).exists():
+                return Response({"message":"No user with email exist !!"})
+            otp = OTPVerificationModel.generate_otp()
+            subject = "Password Reset OTP"
+            message = f"This is a OTP for verification at app {otp}"
+            if AllUtils.sendMail(email, message, subject):
+                
+                token = uuid.uuid4()
+
+                otpSerializer = OTPVerificationModelSerializer(data={
+                    "token" : token,
+                    "opt_method" : OTPVerificationModel.OTPMethods.EMAIL,
+                    "otp_value" : otp,
+                    "purpose" : OTPVerificationModel.Purposes.PASSWORD_RESET,
+                    "email" : email
+                })
+                if otpSerializer.is_valid():
+                    otpSerializer.save()
+                    return Response(
+                        {
+                            "token" : token
+                        }, 
+                        status=status.HTTP_200_OK
+                        )
+                else :
+                    return Response(otpSerializer.errors)
+            return Response({"msg":"Fail"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors)
+    
+
+class VerifyPasswordResetAPI(APIView):
+    authentication_classes  = []
+    def post(self, request):
+        data = request.data
+        serializer = VerifyPasswordResetSerializer(data=data)
+        if serializer.is_valid():
+            token = data['token']
+            otp = data['otp']
+            password = data['password']
+            if OTPVerificationModel.objects.filter(token=token, opt_method=OTPVerificationModel.OTPMethods.EMAIL, purpose=OTPVerificationModel.Purposes.PASSWORD_RESET).exists() == False:
+                return Response({"message": "OTP either used / expired"}, status=status.HTTP_400_BAD_REQUEST)
+            otpModel = OTPVerificationModel.objects.get(token=token)
+            if otpModel.VerifyOTP(otp):
+                email = otpModel.email
+                userDetails = User.objects.get(username=email)
+                userDetails.set_password(password)
+                userDetails.save()
+                otpModel.delete()
+                # Generate access token
+                from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+                access_token = AccessToken.for_user(userDetails)
+
+                # Generate refresh token
+                refresh_token = RefreshToken.for_user(userDetails)
+                
+                return Response({
+                    'access': str(access_token),
+                    'refresh': str(refresh_token),
+                }, status=status.HTTP_201_CREATED)
+            
+            return Response({"message": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status= status.HTTP_400_BAD_REQUEST)
+  
