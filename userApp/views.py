@@ -45,20 +45,25 @@ class UserDetailsModelViewSet(CustomBaseModelViewSet):
     # Custom endpoint: /api/user-details/update_name/
     @action(detail=False, methods=['post'], url_path='consume_credit')
     def consume_credit(self, request, pk=None):
-        instance = self.get_queryset().get(user=request.user)
+        userObj = self.get_queryset().get(user=request.user)
         serializer = UserConsumeCreditSerializer(data = request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        credits = serializer.data["credits"]
-        if instance.credits < credits :
-            return Response({"message" : "Not enough credits !!"}, status = status.HTTP_400_BAD_REQUEST)
-        # instance.cerdits = instance.credits - credits
-        # instance.save()
-        obj = UserDetailsModel.objects.get(user=request.user)
-        obj.credits = instance.credits - credits
-        obj.save()
-
-        serializer = self.get_serializer(obj)
+        # userObj = UserDetailsModel.objects.get(user=request.user)
+        grid_credits = serializer.data.get("grid_credits", None)
+        carousel_credits = serializer.data.get("carousel_credits", None)
+        if grid_credits:
+            if userObj.grid_credits < grid_credits :
+                return Response({"message" : "Not enough grid credits !!"}, status = status.HTTP_400_BAD_REQUEST)
+            userObj.grid_credits = userObj.grid_credits - grid_credits
+        
+        if carousel_credits:
+            if userObj.carousel_credits < carousel_credits :
+                return Response({"message" : "Not enough carousel credits !!"}, status = status.HTTP_400_BAD_REQUEST)
+            userObj.carousel_credits = userObj.carousel_credits - carousel_credits
+        
+        userObj.save()
+        serializer = self.get_serializer(userObj)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
 

@@ -22,4 +22,5 @@ class UserDetialsModelSerializer(CustomBaseModelSerializer):
         fields = "__all__"
 
 class UserConsumeCreditSerializer(serializers.Serializer):
-    credits = serializers.IntegerField()
+    grid_credits = serializers.IntegerField(required=False, min_value=0)
+    carousel_credits = serializers.IntegerField(required=False, min_value=0)

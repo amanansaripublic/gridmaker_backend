@@ -39,6 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     ######
+    'constance',
+    'constance.backends.database',
+    
+    ######
     'rest_framework',
     'userApp',
     'authenticationApp',
@@ -156,4 +160,15 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+
+CONSTANCE_CONFIG = {
+    'DEFAULT_USER_GRID_CREDITS': (3, 'Default credits for new users', int),
+    'DEFAULT_USER_CAROUSEL_CREDITS': (3, 'Bonus credits for referrals', int),
+}
+
+CONSTANCE_CONFIG_FIELDSETS = {
+    'Credit Settings': ('DEFAULT_USER_GRID_CREDITS', 'DEFAULT_USER_CAROUSEL_CREDITS'),
 }

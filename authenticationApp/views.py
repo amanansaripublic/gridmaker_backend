@@ -13,6 +13,7 @@ import uuid
 from  django.contrib.auth.models import User
 from userApp.serializers import UserDetialsModelSerializer, UserSerializer
 from userApp.models import UserDetailsModel
+from constance import config
 
 class RequestRegisterationAPI(APIView):
     authentication_classes  =  []
@@ -61,7 +62,8 @@ class VerifyRegisterationAPI(APIView):
             token = data['token']
             otp = data['otp']
             password = data['password']
-            print(password)
+            phone_number = serializer.data['phone_number']
+            name = serializer.data['name']
             if OTPVerificationModel.objects.filter(token=token, opt_method=OTPVerificationModel.OTPMethods.EMAIL, purpose=OTPVerificationModel.Purposes.REGISTRATION).exists() == False:
                 return Response({"message": "OTP either used / expired"}, status=status.HTTP_400_BAD_REQUEST)
             otpModel = OTPVerificationModel.objects.get(token=token)
@@ -74,8 +76,17 @@ class VerifyRegisterationAPI(APIView):
                 if user_serializer.is_valid() == False :
                     return Response(user_serializer.errors)
                 user = user_serializer.save()
-                userDetails = UserDetailsModel(user=user)
-                userDetails.save()
+                userDetailsSerializer = UserDetialsModelSerializer(data={
+                    "user" :  user.id,
+                    "name" : name,
+                    "grid_credits" : config.DEFAULT_USER_GRID_CREDITS,
+                    "carousel_credits" : config.DEFAULT_USER_CAROUSEL_CREDITS,
+                    "phone_number": phone_number,
+                    "email": email
+                })
+                if not userDetailsSerializer.is_valid():
+                    return Response({"message" : "Server Error : User details validation failed"})
+                userDetailsSerializer.save()
                 otpModel.delete()
                 # Generate access token
                 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
@@ -83,10 +94,10 @@ class VerifyRegisterationAPI(APIView):
 
                 # Generate refresh token
                 refresh_token = RefreshToken.for_user(user)
-                
                 return Response({
                     'access': str(access_token),
                     'refresh': str(refresh_token),
+                    'user_details':  userDetailsSerializer.data
                 }, status=status.HTTP_201_CREATED)
             
             return Response({"message": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
@@ -164,4 +175,12 @@ class VerifyPasswordResetAPI(APIView):
             return Response({"message": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status= status.HTTP_400_BAD_REQUEST)
-  
+
+from .serializers import CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView   
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
