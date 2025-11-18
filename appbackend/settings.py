@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from decouple import config 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -47,11 +49,16 @@ INSTALLED_APPS = [
     'userApp',
     'authenticationApp',
     # 'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
     'rest_framework_simplejwt',
+    'subscriptionApp',
+    'paymentApp',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # <-- Add this (HIGH in the list)
+    'django.middleware.common.CommonMiddleware',  # <-- Must be AFTER CorsMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -172,3 +179,29 @@ CONSTANCE_CONFIG = {
 CONSTANCE_CONFIG_FIELDSETS = {
     'Credit Settings': ('DEFAULT_USER_GRID_CREDITS', 'DEFAULT_USER_CAROUSEL_CREDITS'),
 }
+
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET')
+RAZORPAY_WEBHOOK_SECRET = 'your_webhook_secret'
+
+
+# CORS Settings - Add at the bottom of settings.py
+
+# For Development: Allow all origins (localhost HTML file)
+CORS_ALLOW_ALL_ORIGINS = True  # WARNING: Only for development!
+
+# Allow credentials (cookies, authorization headers)
+CORS_ALLOW_CREDENTIALS = True
+
+# Allow all headers
+CORS_ALLOW_HEADERS = ['*']
+
+# Allow all methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]

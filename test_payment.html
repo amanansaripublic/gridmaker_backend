@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Razorpay Payment</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <h2>Test Razorpay Payment</h2>
+    
+    <!-- REMOVE onclick completely -->
+    <button type="button" id="payButton">Pay for Subscription</button>
+    
+    <div id="status"></div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYzNDIxMDcxLCJpYXQiOjE3NjM0MTkyNzEsImp0aSI6Ijk4MTgwYWZiNTYyMzQ2ODFhOTI3MGRkYzkwOGRjNzJkIiwidXNlcl9pZCI6IjI0In0.ZWW8uWqz3NrVrBUFQwynqMKbHsS4_uDAXjKwkAmkLVM';
+
+        // Attach listener AFTER page loads
+        window.onload = function() {
+            document.getElementById('payButton').onclick = async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = 'Creating order...';
+                
+                try {
+                    const response = await fetch(`${API_URL}/payments/create-order/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${AUTH_TOKEN}`
+                        },
+                        body: JSON.stringify({
+                            plan_id: 1
+                        })
+                    });
+
+                    const orderData = await response.json();
+                    
+                    if (!response.ok) {
+                        statusDiv.innerHTML = '❌ Error: ' + JSON.stringify(orderData);
+                        return;
+                    }
+                    
+                    console.log('Order created:', orderData);
+                    statusDiv.innerHTML = 'Opening Razorpay checkout...';
+
+                    const options = {
+                        "key": orderData.key,
+                        "amount": orderData.amount,
+                        "currency": orderData.currency,
+                        "name": orderData.name,
+                        "description": orderData.description,
+                        "order_id": orderData.order_id,
+                        "prefill": orderData.prefill,
+                        "theme": orderData.theme,
+                        "handler": async function (response) {
+                            console.log('Payment successful:', response);
+                            statusDiv.innerHTML = 'Verifying payment...';
+                            
+                            try {
+                                const verifyResponse = await fetch(`${API_URL}/payments/verify/`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${AUTH_TOKEN}`
+                                    },
+                                    body: JSON.stringify({
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_signature: response.razorpay_signature
+                                    })
+                                });
+
+                                const verifyData = await verifyResponse.json();
+                                console.log('Verification result:', verifyData);
+                                
+                                if (verifyData.status === 'success') {
+                                    statusDiv.innerHTML = '✅ Payment Successful! Subscription Activated!';
+                                    statusDiv.style.background = '#d4edda';
+                                    statusDiv.style.padding = '15px';
+                                } else {
+                                    statusDiv.innerHTML = '❌ Payment Verification Failed: ' + verifyData.message;
+                                    statusDiv.style.background = '#f8d7da';
+                                    statusDiv.style.padding = '15px';
+                                }
+                            } catch (error) {
+                                statusDiv.innerHTML = '❌ Verification Error: ' + error.message;
+                                statusDiv.style.background = '#f8d7da';
+                                statusDiv.style.padding = '15px';
+                            }
+                        },
+                        "modal": {
+                            "ondismiss": function() {
+                                statusDiv.innerHTML = '⚠️ Payment cancelled';
+                                statusDiv.style.background = '#fff3cd';
+                                statusDiv.style.padding = '15px';
+                            }
+                        }
+                    };
+                    
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    statusDiv.innerHTML = '❌ Error: ' + error.message;
+                    statusDiv.style.background = '#f8d7da';
+                    statusDiv.style.padding = '15px';
+                }
+                
+                return false;
+            };
+        };
+    </script>
+</body>
+</html>

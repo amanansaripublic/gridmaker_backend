@@ -17,9 +17,19 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class UserDetialsModelSerializer(CustomBaseModelSerializer):
+    subscription_details = serializers.SerializerMethodField()
     class Meta:
         model = UserDetailsModel
         fields = "__all__"
+    
+    def get_subscription_details(self, obj):
+        from subscriptionApp.models import SubscriptionDetails
+        from subscriptionApp.serializers import SubscriptionDetailsSerializer
+        if SubscriptionDetails.objects.filter(user = obj.user):
+            subscriptionDetails = SubscriptionDetails.objects.get(user=obj.user)
+            subscriptionDetails = SubscriptionDetailsSerializer(subscriptionDetails)
+            return subscriptionDetails.data
+        return None
 
 class UserConsumeCreditSerializer(serializers.Serializer):
     grid_credits = serializers.IntegerField(required=False, min_value=0)
