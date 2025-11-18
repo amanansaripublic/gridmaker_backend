@@ -10,7 +10,7 @@ media/
 staticfiles/
 
 # Environment variables and secrets
-.env
+# .env
 .env.local
 .env.production
 .env.development
