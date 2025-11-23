@@ -23,7 +23,7 @@ class OTPVerificationModel(models.Model):
 
     def generate_otp(length=4):
         otp_chars = "0123456789"
-        # return ''.join(random.choice(otp_chars) for _ in range(length))
+        return ''.join(random.choice(otp_chars) for _ in range(length))
         return '1234'
     
     def VerifyOTP(self, otp):

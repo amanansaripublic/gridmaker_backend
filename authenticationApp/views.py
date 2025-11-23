@@ -14,7 +14,7 @@ from  django.contrib.auth.models import User
 from userApp.serializers import UserDetialsModelSerializer, UserSerializer
 from userApp.models import UserDetailsModel
 from constance import config
-
+from .helpers import generate_otp_email_template, generate_password_reset_email
 class RequestRegisterationAPI(APIView):
     authentication_classes  =  []
     def post(self, request):
@@ -23,11 +23,10 @@ class RequestRegisterationAPI(APIView):
         if serializer.is_valid():
             otp = OTPVerificationModel.generate_otp()
             email = data['email']
-            subject = "Registration OTP"
-            message = f"This is a OTP for verification at app {otp}"
+            subject, plain_msg, html_msg = generate_otp_email_template(app_name="Carotory: Insta Template",otp=otp,expiry_minutes=10)
             if User.objects.filter(username=email):
                 return Response({"message":"User with email already exist"})
-            if AllUtils.sendMail(email, message, subject):
+            if AllUtils.sendMail(email=email, subject=subject, plain_message=plain_msg, html_message=html_msg):
                 
                 token = uuid.uuid4()
 
@@ -115,9 +114,8 @@ class RequestPasswordResetAPI(APIView):
             if not User.objects.filter(username=email).exists():
                 return Response({"message":"No user with email exist !!"})
             otp = OTPVerificationModel.generate_otp()
-            subject = "Password Reset OTP"
-            message = f"This is a OTP for verification at app {otp}"
-            if AllUtils.sendMail(email, message, subject):
+            subject, plain_msg, html_msg = generate_password_reset_email( app_name="GridMaker", otp=otp, expiry_minutes=10 )
+            if AllUtils.sendMail(email=email, subject=subject, plain_message=plain_msg, html_message=html_msg):
                 
                 token = uuid.uuid4()
 
