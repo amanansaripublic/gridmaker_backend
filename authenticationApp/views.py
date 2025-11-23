@@ -114,7 +114,7 @@ class RequestPasswordResetAPI(APIView):
             if not User.objects.filter(username=email).exists():
                 return Response({"message":"No user with email exist !!"})
             otp = OTPVerificationModel.generate_otp()
-            subject, plain_msg, html_msg = generate_password_reset_email( app_name="GridMaker", otp=otp, expiry_minutes=10 )
+            subject, plain_msg, html_msg = generate_password_reset_email( app_name="Carotory: Insta Template", otp=otp, expiry_minutes=10 )
             if AllUtils.sendMail(email=email, subject=subject, plain_message=plain_msg, html_message=html_msg):
                 
                 token = uuid.uuid4()
