@@ -75,4 +75,4 @@ class DeleteAccoutAPIView(APIView):
     def delete(self, request, *args, **kwargs):
         user = request.user
         user.delete()
-        return Response({"message": "Account deleted"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Account deleted"}, status=status.HTTP_200_OK)
