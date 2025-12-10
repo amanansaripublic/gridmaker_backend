@@ -14,6 +14,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework import status
 from .serializers import UserConsumeCreditSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 class UserDetailsModelViewSet(CustomBaseModelViewSet):
     queryset = UserDetailsModel.objects.all()
@@ -68,4 +70,9 @@ class UserDetailsModelViewSet(CustomBaseModelViewSet):
         
 
 
-        
+class DeleteAccoutAPIView(APIView):
+    authentication_classes = [IsAuthenticated]
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        user.delete()
+        return Response({"message": "Account deleted"}, status=status.HTTP_204_NO_CONTENT)
