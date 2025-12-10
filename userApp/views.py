@@ -71,7 +71,7 @@ class UserDetailsModelViewSet(CustomBaseModelViewSet):
 
 
 class DeleteAccoutAPIView(APIView):
-    authentication_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     def delete(self, request, *args, **kwargs):
         user = request.user
         user.delete()
