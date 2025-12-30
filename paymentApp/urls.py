@@ -6,7 +6,9 @@ from .views import (
     SubscriptionWebhookAPIView,
     TestPaymentView,
     RefreshPaymentStatusAPIView,
-    CheckOrderStatusAPIView
+    CheckOrderStatusAPIView,
+    VerifyAppleIAPAPIView,
+    AppleServerNotificationWebhookAPIView
 )
 
 app_name = 'payments'
@@ -18,5 +20,13 @@ urlpatterns = [
     path('webhook/', SubscriptionWebhookAPIView.as_view(), name='webhook'),
     path('test/', TestPaymentView.as_view(), name='test_payment'),
      path('refresh-status/', RefreshPaymentStatusAPIView.as_view(), name='refresh_payment_status'),
-    path('check-status/<str:order_id>/', CheckOrderStatusAPIView.as_view(), name='check_order_status')
+    path('check-status/<str:order_id>/', CheckOrderStatusAPIView.as_view(), name='check_order_status'),
+
+
+    # Apple IAP endpoints
+    path('apple/verify/', VerifyAppleIAPAPIView.as_view(), name='verify-apple-iap'),
+    path('apple/webhook/', AppleServerNotificationWebhookAPIView.as_view(), name='apple-webhook'),
+    
+    # Common endpoints
+    path('history/', PaymentHistoryAPIView.as_view(), name='payment-history'),
 ]

@@ -195,14 +195,55 @@ SIMPLE_JWT = {
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
+# settings.py
+
 CONSTANCE_CONFIG = {
+    # Existing credit settings
     'DEFAULT_USER_GRID_CREDITS': (3, 'Default credits for new users', int),
     'DEFAULT_USER_CAROUSEL_CREDITS': (3, 'Bonus credits for referrals', int),
+    
+    # Apple IAP Configuration
+    'APPLE_BUNDLE_ID': ('com.yourapp.bundleid', 'Apple App Bundle Identifier', str),
+    'APPLE_SHARED_SECRET': ('', 'Apple Shared Secret for receipt validation (legacy)', str),
+    
+    # Apple App Store Server API (StoreKit 2) - For advanced features
+    'APPLE_ISSUER_ID': ('', 'Apple App Store Connect API Issuer ID', str),
+    'APPLE_KEY_ID': ('', 'Apple App Store Connect API Key ID', str),
+    'APPLE_PRIVATE_KEY': ('', 'Apple App Store Connect API Private Key (PEM format)', str),
+    
+    # Razorpay Configuration (moved from hardcoded)
+    'RAZORPAY_KEY_ID': (config('RAZORPAY_KEY_ID', default=''), 'Razorpay Key ID', str),
+    'RAZORPAY_KEY_SECRET': (config('RAZORPAY_KEY_SECRET', default=''), 'Razorpay Key Secret', str),
+    'RAZORPAY_WEBHOOK_SECRET': ('', 'Razorpay Webhook Secret', str),
+    
+    # Business Settings
+    'BUSINESS_NAME': ('Your App Name', 'Business name shown in payment gateway', str),
+    'RAZORPAY_THEME_COLOR': ('#3399cc', 'Razorpay checkout theme color', str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
-    'Credit Settings': ('DEFAULT_USER_GRID_CREDITS', 'DEFAULT_USER_CAROUSEL_CREDITS'),
+    'Credit Settings': (
+        'DEFAULT_USER_GRID_CREDITS', 
+        'DEFAULT_USER_CAROUSEL_CREDITS'
+    ),
+    'Apple In-App Purchase Settings': (
+        'APPLE_BUNDLE_ID',
+        'APPLE_SHARED_SECRET',
+        'APPLE_ISSUER_ID',
+        'APPLE_KEY_ID',
+        'APPLE_PRIVATE_KEY',
+    ),
+    'Razorpay Payment Settings': (
+        'RAZORPAY_KEY_ID',
+        'RAZORPAY_KEY_SECRET',
+        'RAZORPAY_WEBHOOK_SECRET',
+        'BUSINESS_NAME',
+        'RAZORPAY_THEME_COLOR',
+    ),
 }
+
+
+
 
 RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET')
